@@ -1,10 +1,8 @@
 {
   "sqs_handler-role": {
-    "predefined_policies": [],
+    "predefined_policies": ["AWSLambdaSQSQueueExecutionRole"],
     "principal_service": "lambda",
-    "custom_policies": [
-      "lambda-basic-execution"
-    ],
+    "custom_policies": [],
     "resource_type": "iam_role"
   }
 }
