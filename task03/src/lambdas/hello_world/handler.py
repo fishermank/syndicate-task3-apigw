@@ -13,11 +13,7 @@ class HelloWorld(AbstractLambda):
         """
         Explain incoming event here
         """
-        return {
-            "statusCode": 200,
-            "headers": {"Content-Type": "application/json"},
-            "body": {'statusCode': 200, 'message': 'Hello from Lambda'}
-        }
+        return {'statusCode': 200, 'message': 'Hello from Lambda'}
     
 
 HANDLER = HelloWorld()
