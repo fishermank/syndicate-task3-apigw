@@ -41,5 +41,5 @@
     "resource_type": "sns_topic",
     "region": "eu-central-1",
     "event_sources": []
-  },
+  }
 }

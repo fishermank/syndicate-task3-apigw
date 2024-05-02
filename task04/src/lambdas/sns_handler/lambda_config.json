@@ -10,8 +10,8 @@
   "lambda_path": "lambdas\\sns_handler",
   "dependencies": [
     {
-      "resource_type": "sns_topic_trigger",
-      "target_topic": "lambda_topic"
+      "resource_type": "sns_topic",
+      "resource_name": "lambda_topic"
     }
   ],
   "event_sources": [
