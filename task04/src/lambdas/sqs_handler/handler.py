@@ -13,6 +13,7 @@ class SqsHandler(AbstractLambda):
         """
         Explain incoming event here
         """
+        _LOG.info(event)
         return event
 
 

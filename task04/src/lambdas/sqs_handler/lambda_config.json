@@ -11,20 +11,19 @@
   "dependencies": [
     {
       "resource_name": "async_queue",
-      "resource_type": "sqs_queue"
+      "resource_type": "sqs_trigger"
     }
   ],
   "event_sources": [
     {
       "resource_type" : "sqs_trigger",
       "target_queue" : "async_queue",
-      "batch_size" : 100,
+      "batch_size" : 10,
       "batch_window": 1
     }
   ],
   "env_variables": {},
-  "publish_version": true,
-  "alias": "${lambdas_alias_name}",
+  "publish_version": false,
   "url_config": {},
   "ephemeral_storage": 512,
   "logs_expiration": "${logs_expiration}"
