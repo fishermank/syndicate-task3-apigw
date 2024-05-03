@@ -1,4 +1,5 @@
 import datetime
+import json
 import os
 import uuid
 
@@ -30,21 +31,31 @@ class ApiHandler(AbstractLambda):
         _LOG.info(f'TARGET_TABLE: {table_name}')
         table = dynamodb.Table(table_name)
 
-        # body = event['body']
-        # # Deserialize the JSON data
-        # data = json.loads(body)
-
         now = datetime.datetime.now()
         iso_format = now.isoformat()
 
-        item = {
-            "id": str(uuid.uuid4()),
-            "principalId": event['principalId'],
-            "createdAt": iso_format,
-            "body": event
-        }
+        try:
+            item = {
+                "id": str(uuid.uuid4()),
+                "principalId": event['principalId'],
+                "createdAt": iso_format,
+                "body": event
+            }
+        except Exception as error:
+            _LOG.warning(error)
+            body = event['body']
+            data = json.loads(body)
+            _LOG.info(f'body: {body}')
+            _LOG.info(f'data: {data}')
 
-        # Write the item to the table
+            item = {
+                "id": str(uuid.uuid4()),
+                "principalId": data['principalId'],
+                "createdAt": iso_format,
+                "body": data
+            }
+            event = data
+
         response = table.put_item(Item=item)
 
         return {
