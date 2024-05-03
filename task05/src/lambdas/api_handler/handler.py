@@ -1,3 +1,9 @@
+import datetime
+import json
+import uuid
+
+import boto3
+
 from commons.log_helper import get_logger
 from commons.abstract_lambda import AbstractLambda
 
@@ -13,8 +19,37 @@ class ApiHandler(AbstractLambda):
         """
         Explain incoming event here
         """
-        return 200
-    
+        _LOG.info(f'Event: {event}')
+        _LOG.info(f'Context: {context}')
+
+        # Create a DynamoDB resource object
+        dynamodb = boto3.resource('dynamodb')
+
+        # Get the DynamoDB table
+        table = dynamodb.Table('cmtr-20cb4162-Events')
+
+        body = event['body']
+        # Deserialize the JSON data
+        data = json.loads(body)
+
+        now = datetime.datetime.now()
+        iso_format = now.isoformat()
+
+        item = {
+            "id": str(uuid.uuid4()),
+            "principalId": data['principalId'],
+            "createdAt": iso_format,
+            "body": data
+        }
+
+        # Write the item to the table
+        response = table.put_item(Item=item)
+
+        return {
+            "statusCode": 201,
+            "event": event,
+        }
+
 
 HANDLER = ApiHandler()
 
