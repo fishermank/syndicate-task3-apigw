@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 import uuid
 
 import boto3
@@ -20,13 +21,15 @@ class ApiHandler(AbstractLambda):
         Explain incoming event here
         """
         _LOG.info(f'Event: {event}')
-        _LOG.info(f'Context: {context}')
 
         # Create a DynamoDB resource object
         dynamodb = boto3.resource('dynamodb')
 
         # Get the DynamoDB table
-        table = dynamodb.Table('cmtr-20cb4162-Events')
+        # table = dynamodb.Table('cmtr-20cb4162-Events')
+        table_name = os.environ['TARGET_TABLE']
+        _LOG.info(f'TARGET_TABLE: {table_name}')
+        table = dynamodb.Table(table_name)
 
         body = event['body']
         # Deserialize the JSON data
