@@ -1,5 +1,4 @@
 import datetime
-import json
 import os
 import uuid
 
@@ -31,18 +30,18 @@ class ApiHandler(AbstractLambda):
         _LOG.info(f'TARGET_TABLE: {table_name}')
         table = dynamodb.Table(table_name)
 
-        body = event['body']
-        # Deserialize the JSON data
-        data = json.loads(body)
+        # body = event['body']
+        # # Deserialize the JSON data
+        # data = json.loads(body)
 
         now = datetime.datetime.now()
         iso_format = now.isoformat()
 
         item = {
             "id": str(uuid.uuid4()),
-            "principalId": data['principalId'],
+            "principalId": event['principalId'],
             "createdAt": iso_format,
-            "body": data
+            "body": event
         }
 
         # Write the item to the table
