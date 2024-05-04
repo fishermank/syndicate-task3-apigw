@@ -50,6 +50,8 @@ class AuditProducer(AbstractLambda):
             }
 
         response = table.put_item(Item=item)
+        _LOG.info(f'DynamoDb response: {response}')
+        _LOG.info(f'Added item to Audit table: {item}')
 
         return {
             'message': 'Successfully added Audit record',
