@@ -1,4 +1,6 @@
+import datetime
 import os
+import uuid
 
 import boto3
 
@@ -24,15 +26,34 @@ class AuditProducer(AbstractLambda):
         _LOG.info(f'AUDIT_TABLE: {audit_table_name}')
         table = dynamodb.Table(audit_table_name)
 
-        item = {
-            'id': 'safsdfas',
-            'param': 'pampam'
-        }
+        now = datetime.datetime.now()
+        iso_format = now.isoformat()
+
+        if event['Records'][0]['eventName'] == 'INSERT':
+            item = {
+                "id": str(uuid.uuid4()),
+                "itemKey": event['Records'][0]['dynamodb']['Keys']['key']['S'],
+                "modificationTime": iso_format,
+                "newValue": {
+                    "key": event['Records'][0]['dynamodb']['NewImage']['key']['S'],
+                    "value": event['Records'][0]['dynamodb']['NewImage']['value']['N']
+                }
+            }
+        elif event['Records'][0]['eventName'] == 'MODIFY':
+            item = {
+                "id": str(uuid.uuid4()),
+                "itemKey": event['Records'][0]['dynamodb']['Keys']['key']['S'],
+                "modificationTime": iso_format,
+                "updatedAttribute": event['Records'][0]['dynamodb']['NewImage']['key']['S'],
+                "oldValue": event['Records'][0]['dynamodb']['OldImage']['value']['N'],
+                "newValue": event['Records'][0]['dynamodb']['NewImage']['value']['N']
+            }
 
         response = table.put_item(Item=item)
 
         return {
-            'Test': 'test1'
+            'message': 'Successfully added Audit record',
+            'response': response
         }
 
 
