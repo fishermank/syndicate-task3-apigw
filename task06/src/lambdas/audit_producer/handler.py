@@ -20,9 +20,9 @@ class AuditProducer(AbstractLambda):
         _LOG.info(event)
 
         dynamodb = boto3.resource('dynamodb')
-        conf_table_name = os.environ['GONFIGURATION_TABLE']
+        conf_table_name = os.environ['CONFIGURATION_TABLE']
         audit_table_name = os.environ['AUDIT_TABLE']
-        _LOG.info(f'GONFIGURATION_TABLE: {conf_table_name}')
+        _LOG.info(f'CONFIGURATION_TABLE: {conf_table_name}')
         _LOG.info(f'AUDIT_TABLE: {audit_table_name}')
         table = dynamodb.Table(audit_table_name)
 
