@@ -10,14 +10,14 @@
   "lambda_path": "lambdas\\audit_producer",
   "dependencies": [
     {
-      "resource_name": "Configuration",
+      "resource_name": "${configuration_table}",
       "resource_type": "dynamodb_trigger"
     }
   ],
   "event_sources": [
     {
       "resource_type": "dynamodb_trigger",
-      "target_table": "Configuration",
+      "target_table": "${configuration_table}",
       "batch_size": 1
     }
   ],
