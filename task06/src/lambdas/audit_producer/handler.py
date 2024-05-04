@@ -36,7 +36,7 @@ class AuditProducer(AbstractLambda):
                 "modificationTime": iso_format,
                 "newValue": {
                     "key": event['Records'][0]['dynamodb']['NewImage']['key']['S'],
-                    "value": event['Records'][0]['dynamodb']['NewImage']['value']['N']
+                    "value": int(event['Records'][0]['dynamodb']['NewImage']['value']['N'])
                 }
             }
         elif event['Records'][0]['eventName'] == 'MODIFY':
@@ -45,8 +45,8 @@ class AuditProducer(AbstractLambda):
                 "itemKey": event['Records'][0]['dynamodb']['Keys']['key']['S'],
                 "modificationTime": iso_format,
                 "updatedAttribute": event['Records'][0]['dynamodb']['NewImage']['key']['S'],
-                "oldValue": event['Records'][0]['dynamodb']['OldImage']['value']['N'],
-                "newValue": event['Records'][0]['dynamodb']['NewImage']['value']['N']
+                "oldValue": int(event['Records'][0]['dynamodb']['OldImage']['value']['N']),
+                "newValue": int(event['Records'][0]['dynamodb']['NewImage']['value']['N'])
             }
 
         response = table.put_item(Item=item)
