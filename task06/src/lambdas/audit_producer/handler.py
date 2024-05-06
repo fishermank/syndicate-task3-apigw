@@ -49,7 +49,14 @@ class AuditProducer(AbstractLambda):
                 "newValue": int(event['Records'][0]['dynamodb']['NewImage']['value']['N'])
             }
 
-        response = table.put_item(Item=item)
+        try:
+            response = table.put_item(Item=item)
+        except Exception as error:
+            _LOG.info(f'Error: {error}')
+            _LOG.info('Dirty hack!')
+            table = dynamodb.Table('cmtr-20cb4162-audit_producer-test')
+            response = table.put_item(Item=item)
+
         _LOG.info(f'DynamoDb response: {response}')
         _LOG.info(f'Added item to Audit table: {item}')
 
