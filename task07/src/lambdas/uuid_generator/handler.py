@@ -1,3 +1,4 @@
+import json
 import os
 import uuid
 from datetime import datetime
@@ -30,9 +31,12 @@ class UuidGenerator(AbstractLambda):
         s3 = boto3.client('s3')
         file_name = get_datetime()
         _LOG.info(f'file_name: {file_name}')
-        uuid_data = str(uuid.uuid4())
-        _LOG.info(f'uuid_data: {uuid_data}')
-        s3.put_object(Body=uuid_data, Bucket=bucket_name, Key=file_name)
+
+        contents = {'ids': [str(uuid.uuid4()) for _ in range(10)]}
+        contents_serialized = json.dumps(contents)
+
+        _LOG.info(f'uuid_data: {contents}')
+        s3.put_object(Body=contents_serialized, Bucket=bucket_name, Key=file_name)
 
         return 200
 
