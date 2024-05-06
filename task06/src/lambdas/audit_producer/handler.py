@@ -44,7 +44,7 @@ class AuditProducer(AbstractLambda):
                 "id": str(uuid.uuid4()),
                 "itemKey": event['Records'][0]['dynamodb']['Keys']['key']['S'],
                 "modificationTime": iso_format,
-                "updatedAttribute": event['Records'][0]['dynamodb']['NewImage']['key']['S'],
+                "updatedAttribute": "value",
                 "oldValue": int(event['Records'][0]['dynamodb']['OldImage']['value']['N']),
                 "newValue": int(event['Records'][0]['dynamodb']['NewImage']['value']['N'])
             }
