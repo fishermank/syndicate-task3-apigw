@@ -54,7 +54,7 @@ class AuditProducer(AbstractLambda):
         except Exception as error:
             _LOG.info(f'Error: {error}')
             _LOG.info('Dirty hack!')
-            table = dynamodb.Table('cmtr-20cb4162-audit_producer-test')
+            table = dynamodb.Table('cmtr-20cb4162-Audit-test')
             response = table.put_item(Item=item)
 
         _LOG.info(f'DynamoDb response: {response}')
