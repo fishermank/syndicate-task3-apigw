@@ -41,8 +41,11 @@ class ApiHandler(AbstractLambda):
 
     def validate_request(self, event) -> dict:
         pass
-        
+
     def handle_request(self, event, context):
+        print(f'Event: event')
+        if 'rawPath' in event:
+            print(f'rawPath: {event["rawPath"]}')
         mf = MeteoForecast()
         forecast = mf.get_weather_forecast()
         return forecast
