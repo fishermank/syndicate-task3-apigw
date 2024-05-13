@@ -1,5 +1,4 @@
 import json
-from pprint import pprint
 
 from commons.log_helper import get_logger
 from commons.abstract_lambda import AbstractLambda
@@ -30,7 +29,7 @@ class MeteoForecast:
             )
             result = json.loads(forecast.json())
 
-        pprint(result)
+        print(result)
         return result
 
     def get_weather_forecast(self):
@@ -43,12 +42,13 @@ class ApiHandler(AbstractLambda):
         pass
 
     def handle_request(self, event, context):
-        print(f'Event: event')
         if 'rawPath' in event:
             print(f'rawPath: {event["rawPath"]}')
         mf = MeteoForecast()
         forecast = mf.get_weather_forecast()
-        return forecast
+
+        print(f'forecast.hourly: {forecast["hourly"]}')
+        return {'response': forecast}
 
 
 HANDLER = ApiHandler()
