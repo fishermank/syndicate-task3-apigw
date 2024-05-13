@@ -1,5 +1,7 @@
+import json
 import os
 import uuid
+from decimal import Decimal
 
 import boto3
 import requests
@@ -32,6 +34,8 @@ def write_to_dynamo(api_response: dict):
             "utc_offset_seconds": api_response['utc_offset_seconds']
         }
     }
+
+    item = json.loads(json.dumps(item), parse_float=Decimal)
 
     table.put_item(Item=item)
 

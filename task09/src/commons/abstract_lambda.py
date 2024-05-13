@@ -44,8 +44,3 @@ class AbstractLambda:
             _LOG.error(f'Error occurred; Event: {event}; Error: {e}')
             return build_response(code=e.code,
                                   content=e.content)
-        except Exception as e:
-            _LOG.error(
-                f'Unexpected error occurred; Event: {event}; Error: {e}')
-            return build_response(code=500,
-                                  content='Internal server error')
