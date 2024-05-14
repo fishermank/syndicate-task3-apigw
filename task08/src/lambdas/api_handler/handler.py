@@ -12,6 +12,12 @@ from open_meteo import OpenMeteo
 from open_meteo.models import DailyParameters, HourlyParameters
 
 
+def remove_none_values(d):
+    if not isinstance(d, dict):
+        return d
+    return {k: remove_none_values(v) for k, v in d.items() if v is not None}
+
+
 class MeteoForecast:
 
     @staticmethod
@@ -47,6 +53,7 @@ class ApiHandler(AbstractLambda):
             print(f'rawPath: {event["rawPath"]}')
         mf = MeteoForecast()
         forecast = mf.get_weather_forecast()
+        forecast = remove_none_values(forecast)
 
         return forecast
 
