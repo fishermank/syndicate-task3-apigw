@@ -22,10 +22,13 @@ def write_to_dynamo(api_response: dict):
         "forecast": {
             "elevation": api_response['elevation'],
             "generationtime_ms": api_response['generationtime_ms'],
-            "hourly": api_response['hourly'],
+            "hourly": {
+                "temperature_2m": api_response['hourly']['temperature_2m'],
+                "time": api_response['hourly']['time']
+            },
             "hourly_units": {
-             "temperature_2m": api_response['hourly_units']['temperature_2m'],
-             "time": api_response['hourly_units']['time']
+                "temperature_2m": api_response['hourly_units']['temperature_2m'],
+                "time": api_response['hourly_units']['time']
             },
             "latitude": api_response['latitude'],
             "longitude": api_response['longitude'],
