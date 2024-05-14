@@ -31,7 +31,7 @@ class MeteoForecast:
             result = json.loads(forecast.json())
 
         print(result)
-        return forecast  # raw response
+        return result
 
     def get_weather_forecast(self):
         return asyncio.run(self._main())
