@@ -1,10 +1,27 @@
 import os
+import re
 
 import boto3
 from commons.log_helper import get_logger
 from commons.abstract_lambda import AbstractLambda
 
 _LOG = get_logger('ApiHandler-handler')
+
+
+def validate_email(email):
+    # Regular expression for email validation
+    pattern = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+    if not re.match(pattern, email):
+        _LOG.info('Bad email')
+        raise Exception('Bad email')
+
+
+def validate_password(password):
+    # Regular expression for password validation
+    pattern = r'^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[^\w\s]).{12,}$'
+    if not re.match(pattern, password):
+        _LOG.info('Bad password')
+        raise Exception('Bad password')
 
 
 def write_to_dynamo(table_name: str, item: dict):
@@ -37,6 +54,9 @@ def sign_up(sing_up_request: dict):
     given_name = sing_up_request['firstName']
     family_name = sing_up_request['lastName']
 
+    validate_email(username)
+    validate_password(password)
+
     # Create the user
     response = client.admin_create_user(
         UserPoolId=user_pool_id,
@@ -60,7 +80,6 @@ def sign_up(sing_up_request: dict):
     )
 
     _LOG.info(f'Cognito sign up response: {response}')
-    return response
 
 
 def sign_in(sing_in_request):
@@ -82,6 +101,9 @@ def sign_in(sing_in_request):
     username = sing_in_request['email']
     password = sing_in_request['password']
 
+    validate_email(username)
+    validate_password(password)
+
     app_client_id = 'YourAppClientId'
 
     response = client.initiate_auth(
@@ -94,9 +116,6 @@ def sign_in(sing_in_request):
     )
 
     _LOG.info(f'Cognito sign in response: {response}')
-    return {
-        'result': 'User created',
-        'server response': response}
 
 
 class ApiHandler(AbstractLambda):
@@ -107,20 +126,34 @@ class ApiHandler(AbstractLambda):
         tables_table = os.environ['TABLES_TABLE']
         reservation_table = os.environ['RESERVATION_TABLE']
 
-        if set(event.keys()) == {'email', 'lastName', 'password', 'firstName'}:
-            sign_up(event)
-        elif set(event.keys()) == {'email', 'password'}:
-            sign_in(event)
-        else:
-            _LOG.info('Unsupported request type for my task10 app')
+        try:
+            if set(event.keys()) == {'email', 'lastName', 'password', 'firstName'}:
+                sign_up(event)
+            elif set(event.keys()) == {'email', 'password'}:
+                sign_in(event)
+            else:
+                _LOG.info('Unsupported request type for my task10 app')
+        except Exception as error:
+            _LOG.info('Invalid request')
+            _LOG.info(f'Error: {error}')
+            return {
+                'statusCode': 400,
+                'body': {
+                    'error': 'Bad request',
+                    'message': f'{error}'
+                }
+            }
 
         item_table = {'id': 100}
-        item_reserv = {'reservationId': 'rrrr'}
+        item_reserv = {'id': 'rrrr'}
 
         write_to_dynamo(tables_table, item_table)
         write_to_dynamo(reservation_table, item_reserv)
 
-        return {'server response': 'User authenticated'}
+        return {
+            'statusCode': 200,
+            'server response': 'Success'
+        }
 
 
 HANDLER = ApiHandler()
