@@ -140,11 +140,11 @@ def sign_in(sing_in_request):
     _LOG.info(f'Cognito sign in response: {response}')
 
     return {
-        'statusCode': 400,
-        'headers': {
-            'Content-Type': 'application/json'
+        "statusCode": 400,
+        "headers": {
+            "Content-Type": "application/json"
         },
-        'body': json.dumps({'accessToken': access_token})
+        "body": json.dumps({"accessToken": access_token})
      }
 
 
@@ -171,24 +171,26 @@ class ApiHandler(AbstractLambda):
         reservation_table = os.environ['RESERVATION_TABLE']
 
         try:
-            if set(event.keys()) == {'email', 'lastName', 'password', 'firstName'}:
-                sign_up(event)
-            elif set(event.keys()) == {'email', 'password'}:
-                sign_in(event)
+            if event['path'] == '/signup' and event['httpMethod'] == 'POST':
+                body = json.loads(event['body'])
+                sign_up(body)
+            elif event['path'] == '/signin' and event['httpMethod'] == 'POST':
+                body = json.loads(event['body'])
+                sign_in(body)
             else:
                 _LOG.info('Unsupported request type for my task10 app')
         except Exception as error:
             _LOG.info('Invalid request')
             _LOG.info(f'Error: {error}')
             return {
-                'statusCode': 400,
-                'headers': {
-                    'Content-Type': 'application/json'
+                "statusCode": 400,
+                "headers": {
+                    "Content-Type": "application/json"
                 },
-                'body': json.dumps({
-                    'statusCode': 400,
-                    'error': 'Bad request',
-                    'message': f'{error}'
+                "body": json.dumps({
+                    "statusCode": 400,
+                    "error": "Bad request",
+                    "message": f'{error}'
                 })
             }
 
@@ -199,11 +201,11 @@ class ApiHandler(AbstractLambda):
         write_to_dynamo(reservation_table, item_reserv)
 
         return {
-            'statusCode': 200,
-            'headers': {
-                'Content-Type': 'application/json'
+            "statusCode": 200,
+            "headers": {
+                "Content-Type": "application/json"
             },
-            'body': json.dumps({'statusCode': 200, 'message': 'Hello from Lambda'})
+            "body": json.dumps({"statusCode": 200, "message": "Hello from Lambda"})
         }
 
 
