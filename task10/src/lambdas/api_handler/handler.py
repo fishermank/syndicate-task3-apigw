@@ -1,3 +1,4 @@
+import json
 import os
 import re
 
@@ -81,9 +82,26 @@ def sign_up(sing_up_request: dict):
 
     _LOG.info(f'Cognito sign up response: {response}')
 
+    # Set a new permanent password for the user
+    resp = client.admin_set_user_password(
+        UserPoolId=user_pool_id,
+        Username=username,
+        Password=password,
+        Permanent=True
+    )
+
+    _LOG.info(f'set_user_password permanent response: {resp}')
+
 
 def sign_in(sing_in_request):
     _LOG.info('Sign in request')
+
+    username = sing_in_request['email']
+    password = sing_in_request['password']
+
+    validate_email(username)
+    validate_password(password)
+
     client = boto3.client('cognito-idp')
 
     user_pool_name = os.environ['USER_POOL']
@@ -98,13 +116,15 @@ def sign_in(sing_in_request):
             _LOG.info(f'user_pool_id: {user_pool_id}')
             break
 
-    username = sing_in_request['email']
-    password = sing_in_request['password']
+    response = client.list_user_pool_clients(
+        UserPoolId=user_pool_id,
+        MaxResults=10
+    )
 
-    validate_email(username)
-    validate_password(password)
-
-    app_client_id = 'YourAppClientId'
+    client_app = 'my_client_app'
+    for app_client in response['UserPoolClients']:
+        if app_client['ClientName'] == client_app:
+            app_client_id = app_client['ClientId']
 
     response = client.initiate_auth(
         ClientId=app_client_id,
@@ -115,8 +135,32 @@ def sign_in(sing_in_request):
         }
     )
 
+    access_token = response['AuthenticationResult']['AccessToken']
+
     _LOG.info(f'Cognito sign in response: {response}')
 
+    return {
+        'statusCode': 400,
+        'headers': {
+            'Content-Type': 'application/json'
+        },
+        'body': json.dumps({'accessToken': access_token})
+     }
+
+
+# def format_repsonse_for_api_gw(status_code: int, ):
+#
+#     return {
+#         "statusCode": 200,
+#         "headers": {
+#             "Content-Type": "application/json"
+#         },
+#         "isBase64Encoded": false,
+#         "multiValueHeaders": {
+#             "X-Custom-Header": ["My value", "My other value"],
+#         },
+#         "body": "{\n  \"TotalCodeSize\": 104330022,\n  \"FunctionCount\": 26\n}"
+#     }
 
 class ApiHandler(AbstractLambda):
         
@@ -138,10 +182,14 @@ class ApiHandler(AbstractLambda):
             _LOG.info(f'Error: {error}')
             return {
                 'statusCode': 400,
-                'body': {
+                'headers': {
+                    'Content-Type': 'application/json'
+                },
+                'body': json.dumps({
+                    'statusCode': 400,
                     'error': 'Bad request',
                     'message': f'{error}'
-                }
+                })
             }
 
         item_table = {'id': 100}
@@ -152,7 +200,10 @@ class ApiHandler(AbstractLambda):
 
         return {
             'statusCode': 200,
-            'server response': 'Success'
+            'headers': {
+                'Content-Type': 'application/json'
+            },
+            'body': json.dumps({'statusCode': 200, 'message': 'Hello from Lambda'})
         }
 
 
