@@ -144,6 +144,7 @@ def sign_in(sing_in_request):
         "headers": {
             "Content-Type": "application/json"
         },
+        "isBase64Encoded": False,
         "body": json.dumps({"accessToken": access_token})
      }
 
@@ -176,17 +177,22 @@ class ApiHandler(AbstractLambda):
                 sign_up(body)
             elif event['path'] == '/signin' and event['httpMethod'] == 'POST':
                 body = json.loads(event['body'])
-                sign_in(body)
+                lambda_response_with_token = sign_in(body)
+                _LOG.info(f'lambda_response: {lambda_response_with_token}')
+
+                return lambda_response_with_token
             else:
                 _LOG.info('Unsupported request type for my task10 app')
         except Exception as error:
             _LOG.info('Invalid request')
             _LOG.info(f'Error: {error}')
-            return {
+
+            lambda_error_response = {
                 "statusCode": 400,
                 "headers": {
                     "Content-Type": "application/json"
                 },
+                "isBase64Encoded": False,
                 "body": json.dumps({
                     "statusCode": 400,
                     "error": "Bad request",
@@ -194,19 +200,25 @@ class ApiHandler(AbstractLambda):
                 })
             }
 
+            _LOG.info(f'lambda_error_response: {lambda_error_response}')
+            return lambda_error_response
+
         item_table = {'id': 100}
         item_reserv = {'id': 'rrrr'}
 
         write_to_dynamo(tables_table, item_table)
         write_to_dynamo(reservation_table, item_reserv)
 
-        return {
+        lambda_response = {
             "statusCode": 200,
             "headers": {
                 "Content-Type": "application/json"
             },
+            "isBase64Encoded": False,
             "body": json.dumps({"statusCode": 200, "message": "Hello from Lambda"})
         }
+        _LOG.info(f'lambda_response: {lambda_response}')
+        return lambda_response
 
 
 HANDLER = ApiHandler()
