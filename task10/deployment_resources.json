@@ -77,7 +77,7 @@
     "dependencies": [],
     "resources": {
       "/signup": {
-        "enable_cors": false,
+        "enable_cors": true,
         "POST": {
           "enable_proxy": true,
           "authorization_type": "NONE",
@@ -92,7 +92,7 @@
         }
       },
       "/signin": {
-        "enable_cors": false,
+        "enable_cors": true,
         "POST": {
           "enable_proxy": true,
           "authorization_type": "NONE",
@@ -106,7 +106,7 @@
         }
       },
       "/tables": {
-        "enable_cors": false,
+        "enable_cors": true,
         "POST": {
           "authorization_type": "task10-authorizer",
           "integration_type": "lambda",
@@ -131,7 +131,7 @@
         }
       },
       "/reservations": {
-        "enable_cors": false,
+        "enable_cors": true,
         "POST": {
           "authorization_type": "task10-authorizer",
           "integration_type": "lambda",

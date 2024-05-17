@@ -140,7 +140,7 @@ def sign_in(sing_in_request):
     _LOG.info(f'Cognito sign in response: {response}')
 
     return {
-        "statusCode": 400,
+        "statusCode": 200,
         "headers": {
             "Content-Type": "application/json"
         },
@@ -149,19 +149,23 @@ def sign_in(sing_in_request):
      }
 
 
-# def format_repsonse_for_api_gw(status_code: int, ):
-#
-#     return {
-#         "statusCode": 200,
-#         "headers": {
-#             "Content-Type": "application/json"
-#         },
-#         "isBase64Encoded": false,
-#         "multiValueHeaders": {
-#             "X-Custom-Header": ["My value", "My other value"],
-#         },
-#         "body": "{\n  \"TotalCodeSize\": 104330022,\n  \"FunctionCount\": 26\n}"
-#     }
+def tables_get():
+    dynamodb = boto3.resource('dynamodb')
+
+    table_name = os.environ['TABLES_TABLE']
+    _LOG.info(f'TABLES_TABLE: {table_name}')
+
+    # table = dynamodb.Table(table_name)
+
+    response = dynamodb.scan(TableName=table_name)
+    items = response['Items']
+
+    result = {
+         "tables": items
+     }
+
+    return result
+
 
 class ApiHandler(AbstractLambda):
         
