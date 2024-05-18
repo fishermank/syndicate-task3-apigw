@@ -137,16 +137,20 @@ def sign_in(sing_in_request):
     )
 
     access_token = response['AuthenticationResult']['AccessToken']
+    id_token = response['AuthenticationResult']['IdToken']
 
     _LOG.info(f'Cognito sign in response: {response}')
 
     return {
         'statusCode': 200,
-        'body': json.dumps({'accessToken': access_token})
+        # 'body': json.dumps({'accessToken': access_token})
+        'body': json.dumps({'accessToken': id_token})
      }
 
 
 def tables_post(item: dict):
+    _LOG.info('/tables POST')
+    _LOG.info(f'item: {item}')
     try:
         table_name = os.environ['TABLES_TABLE']
         _LOG.info(f'TABLES_TABLE: {table_name}')
@@ -159,20 +163,23 @@ def tables_post(item: dict):
     else:
         return {
             'statusCode': 200,
-            'body': json.dumps({'Message: success'})
+            'body': json.dumps({'Message': 'success'})
         }
 
 
 def tables_get() -> dict:
+    _LOG.info('/tables GET')
     try:
         dynamodb = boto3.resource('dynamodb')
         table_name = os.environ['TABLES_TABLE']
         _LOG.info(f'TABLES_TABLE: {table_name}')
 
-        response = dynamodb.scan(TableName=table_name)
+        table = dynamodb.Table(table_name)
+        response = table.scan()
         items = response['Items']
 
         result = {'tables': items}
+        _LOG.info(f'Tables fetched: {result}')
     except Exception as error:
         return {
             'statusCode': 400,
@@ -185,18 +192,41 @@ def tables_get() -> dict:
         }
 
 
+def tables_get_by_id(table_id: int) -> dict:
+    try:
+        _LOG.info('/tables/{tableId} GET')
+        dynamodb = boto3.resource('dynamodb')
+        table_name = os.environ['TABLES_TABLE']
+        _LOG.info(f'TABLES_TABLE: {table_name}')
+
+        table = dynamodb.Table(table_name)
+        item = table.get_item(Key={'id': int(table_id)})
+        _LOG.info(item)
+    except Exception as error:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'Error message': error})
+        }
+    else:
+        return {
+            'statusCode': 200,
+            'body': json.dumps({item})
+        }
+
+
 class ApiHandler(AbstractLambda):
         
     def handle_request(self, event, context):
         _LOG.info(f'Event: {event}')
 
-        tables_table = os.environ['TABLES_TABLE']
-        reservation_table = os.environ['RESERVATION_TABLE']
-
         try:
             if event['path'] == '/signup' and event['httpMethod'] == 'POST':
                 body = json.loads(event['body'])
                 sign_up(body)
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps({'status': 200, 'message': 'Signup successful'})
+                }
             elif event['path'] == '/signin' and event['httpMethod'] == 'POST':
                 body = json.loads(event['body'])
                 lambda_response_with_token = sign_in(body)
@@ -206,6 +236,8 @@ class ApiHandler(AbstractLambda):
                 body = json.loads(event['body'])
                 return tables_post(body)
             elif event['path'] == '/tables' and event['httpMethod'] == 'GET':
+                return tables_get()
+            elif '/tables/' in event['path'] and event['httpMethod'] == 'GET':
                 return tables_get()
             else:
                 _LOG.info('Unsupported request type for my task10 app')
@@ -228,19 +260,6 @@ class ApiHandler(AbstractLambda):
 
             _LOG.info(f'lambda_error_response: {lambda_error_response}')
             return lambda_error_response
-
-        item_table = {'id': 100}
-        item_reserv = {'id': 'rrrr'}
-
-        write_to_dynamo(tables_table, item_table)
-        write_to_dynamo(reservation_table, item_reserv)
-
-        lambda_response = {
-            'statusCode': 200,
-            'body': json.dumps({'status': 200, 'message': 'Hello from Lambda'})
-        }
-        _LOG.info(f'lambda_response: {lambda_response}')
-        return lambda_response
 
 
 HANDLER = ApiHandler()
