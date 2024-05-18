@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import uuid
 
 import boto3
 from commons.log_helper import get_logger
@@ -211,6 +212,52 @@ def tables_get_by_id(table_id: int) -> dict:
         return {
             'statusCode': 200,
             'body': json.dumps({item})
+        }
+
+
+def reservations_post(item: dict):
+    _LOG.info('/reservations POST')
+    _LOG.info(f'item: {item}')
+    try:
+        table_name = os.environ['RESERVATION_TABLE']
+        _LOG.info(f'RESERVATION_TABLE: {table_name}')
+        reservation_id = uuid.uuid4()
+        item.update({'id': reservation_id})
+        write_to_dynamo(table_name, item)
+    except Exception as error:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'Error message': error})
+        }
+    else:
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'reservationId': reservation_id})
+        }
+
+
+def reservations_get() -> dict:
+    _LOG.info('/reservations GET')
+    try:
+        dynamodb = boto3.resource('dynamodb')
+        table_name = os.environ['RESERVATION_TABLE']
+        _LOG.info(f'RESERVATION_TABLE: {table_name}')
+
+        table = dynamodb.Table(table_name)
+        response = table.scan()
+        items = response['Items']
+
+        result = {'reservations': items}
+        _LOG.info(f'Reservations fetched: {result}')
+    except Exception as error:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'Error message': error})
+        }
+    else:
+        return {
+            'statusCode': 200,
+            'body': json.dumps({result})
         }
 
 
