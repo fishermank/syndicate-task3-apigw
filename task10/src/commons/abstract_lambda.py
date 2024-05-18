@@ -28,4 +28,5 @@ class AbstractLambda:
         pass
 
     def lambda_handler(self, event, context):
-        self.handle_request(event=event, context=context)
+        execution_result = self.handle_request(event=event, context=context)
+        return execution_result

@@ -140,12 +140,8 @@ def sign_in(sing_in_request):
     _LOG.info(f'Cognito sign in response: {response}')
 
     return {
-        "statusCode": 200,
-        "headers": {
-            "Content-Type": "application/json"
-        },
-        "isBase64Encoded": False,
-        "body": json.dumps({"accessToken": access_token})
+        'statusCode': 200,
+        'body': json.dumps({'accessToken': access_token})
      }
 
 
@@ -161,7 +157,7 @@ def tables_get():
     items = response['Items']
 
     result = {
-         "tables": items
+         'tables': items
      }
 
     return result
@@ -192,15 +188,11 @@ class ApiHandler(AbstractLambda):
             _LOG.info(f'Error: {error}')
 
             lambda_error_response = {
-                "statusCode": 400,
-                "headers": {
-                    "Content-Type": "application/json"
-                },
-                "isBase64Encoded": False,
-                "body": json.dumps({
-                    "statusCode": 400,
-                    "error": "Bad request",
-                    "message": f'{error}'
+                'statusCode': 400,
+                'body': json.dumps({
+                    'statusCode': 400,
+                    'error': 'Bad request',
+                    'message': f'{error}'
                 })
             }
 
@@ -214,12 +206,8 @@ class ApiHandler(AbstractLambda):
         write_to_dynamo(reservation_table, item_reserv)
 
         lambda_response = {
-            "statusCode": 200,
-            "headers": {
-                "Content-Type": "application/json"
-            },
-            "isBase64Encoded": False,
-            "body": json.dumps({"statusCode": 200, "message": "Hello from Lambda"})
+            'statusCode': 200,
+            'body': json.dumps({'status': 200, 'message': 'Hello from Lambda'})
         }
         _LOG.info(f'lambda_response: {lambda_response}')
         return lambda_response

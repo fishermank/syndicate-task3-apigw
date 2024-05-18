@@ -12,6 +12,7 @@
             "dynamodb:PutItem",
             "dynamodb:Batch*",
             "dynamodb:DeleteItem",
+            "dynamodb:Scan",
             "ssm:PutParameter",
             "ssm:GetParameter",
             "kms:Decrypt",
@@ -74,15 +75,20 @@
   "task10_api": {
     "resource_type": "api_gateway",
     "deploy_stage": "api",
-    "dependencies": [],
+    "dependencies": [
+      {
+        "resource_name": "api_handler",
+        "resource_type": "lambda"
+      }
+    ],
     "resources": {
       "/signup": {
-        "enable_cors": true,
+        "enable_cors": false,
         "POST": {
-          "enable_proxy": true,
           "authorization_type": "NONE",
           "integration_type": "lambda",
           "lambda_name": "api_handler",
+          "enable_proxy": true,
           "api_key_required": false,
           "method_request_parameters": {},
           "integration_request_body_template": {},
@@ -92,17 +98,18 @@
         }
       },
       "/signin": {
-        "enable_cors": true,
+        "enable_cors": false,
         "POST": {
-          "enable_proxy": true,
           "authorization_type": "NONE",
           "integration_type": "lambda",
           "lambda_name": "api_handler",
+          "enable_proxy": true,
           "api_key_required": false,
           "method_request_parameters": {},
           "integration_request_body_template": {},
           "responses": [],
-          "integration_responses": []
+          "integration_responses": [],
+          "default_error_pattern": true
         }
       },
       "/tables": {
