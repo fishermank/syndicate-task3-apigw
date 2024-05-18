@@ -31,7 +31,8 @@ def write_to_dynamo(table_name: str, item: dict):
     _LOG.info(f'TARGET_TABLE: {table_name}')
     table = dynamodb.Table(table_name)
     # item = json.loads(json.dumps(item), parse_float=Decimal)
-    table.put_item(Item=item)
+    dynamo_response = table.put_item(Item=item)
+    _LOG.info(dynamo_response)
 
 
 def sign_up(sing_up_request: dict):
@@ -145,22 +146,43 @@ def sign_in(sing_in_request):
      }
 
 
-def tables_get():
-    dynamodb = boto3.resource('dynamodb')
+def tables_post(item: dict):
+    try:
+        table_name = os.environ['TABLES_TABLE']
+        _LOG.info(f'TABLES_TABLE: {table_name}')
+        write_to_dynamo(table_name, item)
+    except Exception as error:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'Error message': error})
+        }
+    else:
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'Message: success'})
+        }
 
-    table_name = os.environ['TABLES_TABLE']
-    _LOG.info(f'TABLES_TABLE: {table_name}')
 
-    # table = dynamodb.Table(table_name)
+def tables_get() -> dict:
+    try:
+        dynamodb = boto3.resource('dynamodb')
+        table_name = os.environ['TABLES_TABLE']
+        _LOG.info(f'TABLES_TABLE: {table_name}')
 
-    response = dynamodb.scan(TableName=table_name)
-    items = response['Items']
+        response = dynamodb.scan(TableName=table_name)
+        items = response['Items']
 
-    result = {
-         'tables': items
-     }
-
-    return result
+        result = {'tables': items}
+    except Exception as error:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'Error message': error})
+        }
+    else:
+        return {
+            'statusCode': 200,
+            'body': json.dumps({result})
+        }
 
 
 class ApiHandler(AbstractLambda):
@@ -179,10 +201,18 @@ class ApiHandler(AbstractLambda):
                 body = json.loads(event['body'])
                 lambda_response_with_token = sign_in(body)
                 _LOG.info(f'lambda_response: {lambda_response_with_token}')
-
                 return lambda_response_with_token
+            elif event['path'] == '/tables' and event['httpMethod'] == 'POST':
+                body = json.loads(event['body'])
+                return tables_post(body)
+            elif event['path'] == '/tables' and event['httpMethod'] == 'GET':
+                return tables_get()
             else:
                 _LOG.info('Unsupported request type for my task10 app')
+                return {
+                    'statusCode': 400,
+                    'body': json.dumps({'Error message': 'Unsupported request type for my task10 app'})
+                }
         except Exception as error:
             _LOG.info('Invalid request')
             _LOG.info(f'Error: {error}')
