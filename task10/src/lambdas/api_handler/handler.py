@@ -163,7 +163,7 @@ def tables_post(item: dict):
     else:
         return {
             'statusCode': 200,
-            'body': json.dumps({'Message': 'success'})
+            'body': json.dumps({'id': item['id']})
         }
 
 
