@@ -249,11 +249,11 @@ def reservations_post(item: dict):
 
     # Check if a table exists
     table_name = os.environ['TABLES_TABLE']
-    _LOG.info(f'TABLES_TABLE: {table_name}')
+    _LOG.info(f'TABLES_TABLE (reserv post): {table_name}')
     dynamodb = boto3.resource('dynamodb')
     table_number = item['tableNumber']
     table = dynamodb.Table(table_name)
-    response = table.get_item(Key={'id': int(table_number)})
+    response = table.get_item(Key={'id': table_number})
     _LOG.info(f'response: {response}')
     if 'Item' not in response:
         _LOG.info(f'No such table')
@@ -266,7 +266,7 @@ def reservations_post(item: dict):
     reservations = _get_reservations()
     # {'reservations': [{'phoneNumber': '0661902100', 'clientName': 'John Doe', 'date': '2024-05-19', 'slotTimeStart': '13:00', 'slotTimeEnd': '15:00', 'id': '6cfd60a3-b575-4a62-8596-00be6bc61f08', 'tableNumber': 25}]}
     for i in reservations['reservations']:
-        if i['date'] == item['date']:
+        if i['date'] == item['date'] and i['tableNumber'] == item['tableNumber']:
             if is_time_in_slot(i['slotTimeStart'], i['slotTimeEnd'], item['slotTimeStart']) or is_time_in_slot(i['slotTimeStart'], i['slotTimeEnd'], item['slotTimeEnd']):
                 return {
                     'statusCode': 400,
@@ -275,7 +275,7 @@ def reservations_post(item: dict):
 
     try:
         table_name = os.environ['RESERVATION_TABLE']
-        _LOG.info(f'RESERVATION_TABLE: {table_name}')
+        _LOG.info(f'RESERVATION_TABLE try: {table_name}')
         reservation_id = str(uuid.uuid4())
         item.update({'id': reservation_id})
         _LOG.info(f'updated item: {item}')
