@@ -238,10 +238,14 @@ def reservations_post(item: dict):
     try:
         table_name = os.environ['RESERVATION_TABLE']
         _LOG.info(f'RESERVATION_TABLE: {table_name}')
-        reservation_id = uuid.uuid4()
+        reservation_id = str(uuid.uuid4())
         item.update({'id': reservation_id})
+        _LOG.info(f'updated item: {item}')
         write_to_dynamo(table_name, item)
     except Exception as error:
+        traceback_str = traceback.format_exc()
+        print(traceback_str)
+
         return {
             'statusCode': 400,
             'body': json.dumps({'Error message': error})
@@ -263,6 +267,7 @@ def reservations_get() -> dict:
         table = dynamodb.Table(table_name)
         response = table.scan()
         items = response['Items']
+        items = convert_decimals_to_int(items)
 
         result = {'reservations': items}
         _LOG.info(f'Reservations fetched: {result}')
@@ -304,6 +309,11 @@ class ApiHandler(AbstractLambda):
             elif event['resource'] == '/tables/{tableId}' and event['httpMethod'] == 'GET':
                 table_id = int(event['path'].split('/')[-1])
                 return tables_get_by_id(table_id)
+            elif event['path'] == '/reservations' and event['httpMethod'] == 'POST':
+                body = json.loads(event['body'])
+                return reservations_post(body)
+            elif event['path'] == '/reservations' and event['httpMethod'] == 'GET':
+                return reservations_get()
             else:
                 _LOG.info('Unsupported request type for my task10 app')
                 return {
