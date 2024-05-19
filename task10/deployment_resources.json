@@ -165,6 +165,21 @@
           "integration_responses": [],
           "default_error_pattern": true
         }
+      },
+      "/tables/{tableId}": {
+        "enable_cors": false,
+        "GET": {
+          "authorization_type": "task10-authorizer",
+          "integration_type": "lambda",
+          "lambda_name": "api_handler",
+          "enable_proxy": true,
+          "api_key_required": false,
+          "method_request_parameters": {},
+          "integration_request_body_template": {},
+          "responses": [],
+          "integration_responses": [],
+          "default_error_pattern": true
+        }
       }
     },
     "authorizers": {

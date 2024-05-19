@@ -1,13 +1,26 @@
 import json
 import os
 import re
+import traceback
 import uuid
+from decimal import Decimal
 
 import boto3
 from commons.log_helper import get_logger
 from commons.abstract_lambda import AbstractLambda
 
 _LOG = get_logger('ApiHandler-handler')
+
+
+def convert_decimals_to_int(i):
+    if isinstance(i, list):
+        return [convert_decimals_to_int(i) for i in i]
+    elif isinstance(i, dict):
+        return {k: convert_decimals_to_int(v) for k, v in i.items()}
+    elif isinstance(i, Decimal):
+        return int(i)
+    else:
+        return i
 
 
 def validate_email(email):
@@ -178,6 +191,8 @@ def tables_get() -> dict:
         table = dynamodb.Table(table_name)
         response = table.scan()
         items = response['Items']
+        items = convert_decimals_to_int(items)
+        items = sorted(items, key=lambda item: item['id'])
 
         result = {'tables': items}
         _LOG.info(f'Tables fetched: {result}')
@@ -189,7 +204,7 @@ def tables_get() -> dict:
     else:
         return {
             'statusCode': 200,
-            'body': json.dumps({result})
+            'body': json.dumps(result)
         }
 
 
@@ -202,6 +217,8 @@ def tables_get_by_id(table_id: int) -> dict:
 
         table = dynamodb.Table(table_name)
         item = table.get_item(Key={'id': int(table_id)})
+        item = item['Item']
+        item = convert_decimals_to_int(item)
         _LOG.info(item)
     except Exception as error:
         return {
@@ -211,7 +228,7 @@ def tables_get_by_id(table_id: int) -> dict:
     else:
         return {
             'statusCode': 200,
-            'body': json.dumps({item})
+            'body': json.dumps(item)
         }
 
 
@@ -257,7 +274,7 @@ def reservations_get() -> dict:
     else:
         return {
             'statusCode': 200,
-            'body': json.dumps({result})
+            'body': json.dumps(result)
         }
 
 
@@ -284,8 +301,9 @@ class ApiHandler(AbstractLambda):
                 return tables_post(body)
             elif event['path'] == '/tables' and event['httpMethod'] == 'GET':
                 return tables_get()
-            elif '/tables/' in event['path'] and event['httpMethod'] == 'GET':
-                return tables_get()
+            elif event['resource'] == '/tables/{tableId}' and event['httpMethod'] == 'GET':
+                table_id = int(event['path'].split('/')[-1])
+                return tables_get_by_id(table_id)
             else:
                 _LOG.info('Unsupported request type for my task10 app')
                 return {
@@ -304,6 +322,8 @@ class ApiHandler(AbstractLambda):
                     'message': f'{error}'
                 })
             }
+            traceback_str = traceback.format_exc()
+            print(traceback_str)
 
             _LOG.info(f'lambda_error_response: {lambda_error_response}')
             return lambda_error_response
