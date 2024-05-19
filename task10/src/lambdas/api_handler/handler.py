@@ -3,6 +3,7 @@ import os
 import re
 import traceback
 import uuid
+from datetime import datetime
 from decimal import Decimal
 
 import boto3
@@ -10,6 +11,16 @@ from commons.log_helper import get_logger
 from commons.abstract_lambda import AbstractLambda
 
 _LOG = get_logger('ApiHandler-handler')
+
+
+def is_time_in_slot(start: str, end: str, tested_time):
+    # Convert strings to time objects
+    start = datetime.strptime(start, "%H:%M").time()
+    end = datetime.strptime(end, "%H:%M").time()
+    time = datetime.strptime(tested_time, "%H:%M").time()
+
+    # Check if the given time is within the slot
+    return start <= time <= end
 
 
 def convert_decimals_to_int(i):
@@ -235,6 +246,33 @@ def tables_get_by_id(table_id: int) -> dict:
 def reservations_post(item: dict):
     _LOG.info('/reservations POST')
     _LOG.info(f'item: {item}')
+
+    # Check if a table exists
+    table_name = os.environ['TABLES_TABLE']
+    _LOG.info(f'TABLES_TABLE: {table_name}')
+    dynamodb = boto3.resource('dynamodb')
+    table_number = item['tableNumber']
+    table = dynamodb.Table(table_name)
+    response = table.get_item(Key={'id': int(table_number)})
+    _LOG.info(f'response: {response}')
+    if 'Item' not in response:
+        _LOG.info(f'No such table')
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'Error message': 'Table does not exist'})
+        }
+
+    # Handle conflicting reservations
+    reservations = _get_reservations()
+    # {'reservations': [{'phoneNumber': '0661902100', 'clientName': 'John Doe', 'date': '2024-05-19', 'slotTimeStart': '13:00', 'slotTimeEnd': '15:00', 'id': '6cfd60a3-b575-4a62-8596-00be6bc61f08', 'tableNumber': 25}]}
+    for i in reservations['reservations']:
+        if i['date'] == item['date']:
+            if is_time_in_slot(i['slotTimeStart'], i['slotTimeEnd'], item['slotTimeStart']) or is_time_in_slot(i['slotTimeStart'], i['slotTimeEnd'], item['slotTimeEnd']):
+                return {
+                    'statusCode': 400,
+                    'body': json.dumps({'Error message': f'Overlapping time'})
+                }
+
     try:
         table_name = os.environ['RESERVATION_TABLE']
         _LOG.info(f'RESERVATION_TABLE: {table_name}')
@@ -257,20 +295,26 @@ def reservations_post(item: dict):
         }
 
 
+def _get_reservations() -> dict:
+    dynamodb = boto3.resource('dynamodb')
+    table_name = os.environ['RESERVATION_TABLE']
+    _LOG.info(f'RESERVATION_TABLE: {table_name}')
+
+    table = dynamodb.Table(table_name)
+    response = table.scan()
+    items = response['Items']
+    items = convert_decimals_to_int(items)
+
+    result = {'reservations': items}
+    _LOG.info(f'Reservations fetched: {result}')
+    return result
+
+
 def reservations_get() -> dict:
     _LOG.info('/reservations GET')
     try:
-        dynamodb = boto3.resource('dynamodb')
-        table_name = os.environ['RESERVATION_TABLE']
-        _LOG.info(f'RESERVATION_TABLE: {table_name}')
+        result = _get_reservations()
 
-        table = dynamodb.Table(table_name)
-        response = table.scan()
-        items = response['Items']
-        items = convert_decimals_to_int(items)
-
-        result = {'reservations': items}
-        _LOG.info(f'Reservations fetched: {result}')
     except Exception as error:
         return {
             'statusCode': 400,
