@@ -251,11 +251,20 @@ def reservations_post(item: dict):
     table_name = os.environ['TABLES_TABLE']
     _LOG.info(f'TABLES_TABLE (reserv post): {table_name}')
     dynamodb = boto3.resource('dynamodb')
-    table_number = item['tableNumber']
+
     table = dynamodb.Table(table_name)
-    response = table.get_item(Key={'id': table_number})
-    _LOG.info(f'response: {response}')
-    if 'Item' not in response:
+    response = table.scan()
+    _LOG.info(f'Scan response: {response}')
+    items = response['Items']
+    items = convert_decimals_to_int(items)
+
+    required_table_number = item['tableNumber']
+    for table in items:
+        _LOG.info(f'table item: {table}')
+        if table['number'] == required_table_number:
+            _LOG.info(f'Table found: {required_table_number}')
+            break
+    else:
         _LOG.info(f'No such table')
         return {
             'statusCode': 400,
