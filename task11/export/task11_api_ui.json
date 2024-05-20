@@ -40,7 +40,7 @@
         },
         "security": [
           {
-            "task10-authorizer": []
+            "authorizer": []
           }
         ],
         "x-amazon-apigateway-integration": {
@@ -92,7 +92,7 @@
         },
         "security": [
           {
-            "task10-authorizer": []
+            "authorizer": []
           }
         ],
         "x-amazon-apigateway-integration": {
@@ -136,7 +136,7 @@
         },
         "security": [
           {
-            "task10-authorizer": []
+            "authorizer": []
           }
         ],
         "x-amazon-apigateway-integration": {
@@ -188,7 +188,7 @@
         },
         "security": [
           {
-            "task10-authorizer": []
+            "authorizer": []
           }
         ],
         "x-amazon-apigateway-integration": {
@@ -340,7 +340,7 @@
         },
         "security": [
           {
-            "task10-authorizer": []
+            "authorizer": []
           }
         ],
         "x-amazon-apigateway-integration": {
@@ -446,7 +446,7 @@
       }
     },
     "securitySchemes": {
-      "task10-authorizer": {
+      "authorizer": {
         "type": "apiKey",
         "name": "Authorization",
         "in": "header",
